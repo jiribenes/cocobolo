@@ -4,7 +4,13 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Surface.Loc where
+module Surface.Loc
+    ( Range(..)
+    , newRange
+    , newRangeUnchecked
+    , includes
+    , Loc(..)
+    ) where
 
 import           Data.Data                      ( Data )
 import           GHC.Generics                   ( Generic )

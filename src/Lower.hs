@@ -4,7 +4,10 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE LambdaCase #-}
 
-module Lower where
+module Lower
+    ( LowerError(..)
+    , lower
+    ) where
 
 import           Control.Lens                   ( (<&>)
                                                 , (^.)
@@ -228,9 +231,8 @@ connectedComponents =
         G.CyclicSCC defs ->
             Define $ NE.fromList $ (\(e, x, _) -> Binding x e ()) <$> defs
 
-lowerTopLevel
-    :: [S.Decl] -> Either LowerError ([Definition ()], [EffectDefinition])
-lowerTopLevel decls =
+lower :: [S.Decl] -> Either LowerError ([Definition ()], [EffectDefinition])
+lower decls =
     decls
         &   traverse lowerDecl
         <&> partitionEithers

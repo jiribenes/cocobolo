@@ -4,7 +4,24 @@
 
 -- | This module is designed to be imported in a qualified manner,
 -- that is @import qualified Assumptions as A@.
-module Assumptions where
+module Assumptions
+    ( Assumptions
+    , typeAssumptions
+    , singleton
+    , extend
+    , extendMany
+    , makeSafeWrt
+    , remove
+    , removeMany
+    , removeWrt
+    , removeManyWrt
+    , removeType
+    , removeTypeMany
+    , lookupType
+    , keys
+    , keysSet
+    , safeSet
+    ) where
 
 import           Data.List                      ( nub
                                                 , partition
@@ -13,9 +30,13 @@ import           Data.Maybe                     ( mapMaybe )
 import qualified Data.Set                      as S
 import           GHC.Generics                   ( Generic )
 
-import           Capability
+import           Capability                     ( BaseCapability
+                                                , Capability
+                                                , capList
+                                                , capMember
+                                                )
 import           Syntax                         ( Variable(..) )
-import           Type
+import           Type                           ( Type )
 
 data Assumption
     = HasType Variable Type

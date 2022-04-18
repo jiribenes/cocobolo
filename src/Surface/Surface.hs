@@ -2,7 +2,18 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Surface.Surface where
+module Surface.Surface
+    ( Id
+    , TypeId
+    , BinOp(..)
+    , UnOp(..)
+    , Safety(..)
+    , Param(..)
+    , Expr(..)
+    , EffectArm
+    , Decl(..)
+    , Type(..)
+    ) where
 
 import           Data.Text                      ( Text )
 import           GHC.Generics                   ( Generic )
@@ -77,7 +88,7 @@ instance Pretty BinOp where
 instance Pretty UnOp where
     pretty (Safe cap) | cap == noCap = "safe"
                       | otherwise    = "safe<" <> pretty cap <> ">"
-    pretty Deref          = "!"
+    pretty Deref = "!"
 
 instance Pretty Param where
     pretty (Param safety ident maybeType) =

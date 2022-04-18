@@ -9,7 +9,7 @@
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-module Infer where
+module Infer (infer) where
 
 import           Control.Lens
 import           Control.Monad.Except

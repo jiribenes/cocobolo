@@ -17,12 +17,12 @@ runCocobolo = putStrLn "TODO TODO TODO (use runFile or runTopLevel)"
 
 runTopLevel :: FilePath -> Text -> IO ()
 runTopLevel filename contents = do
-    decls <- Parser.parseTopLevel filename contents
+    decls <- Parser.parse filename contents
     putDoc $ PP.align $ PP.vcat $ pretty <$> decls
     putStrLn ""
     putStrLn ""
 
-    (defs, effs) <- case Lower.lowerTopLevel decls of
+    (defs, effs) <- case Lower.lower decls of
         Right loweredDefs -> pure loweredDefs
         Left  err         -> do
             putStrLn "[ERROR] Encountered an error during lowering:"

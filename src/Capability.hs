@@ -4,7 +4,16 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 
-module Capability where
+module Capability
+    ( BaseCapability(..)
+    , Capability(..)
+    , noCap
+    , singletonCap
+    , capList
+    , capMember
+    , capDifference
+    , reservedCapNames
+    ) where
 
 import           Data.Data                      ( Data )
 import qualified Data.Set                      as S
@@ -12,9 +21,6 @@ import           Data.Text                      ( Text )
 import           GHC.Generics                   ( Generic )
 import           Prettyprinter                  ( Pretty(pretty) )
 import qualified Prettyprinter                 as PP
-
-reservedCapNames :: S.Set Text
-reservedCapNames = S.fromList ["ref", "exit"]
 
 newtype BaseCapability = BaseCapability { unBaseCapability :: Text }
     deriving stock (Eq, Ord, Show, Data, Generic)
@@ -44,3 +50,7 @@ capMember b (Capability s) = S.member b s
 capDifference :: Capability -> Capability -> Capability
 capDifference (Capability allCaps) (Capability someCaps) =
     Capability $ S.difference allCaps someCaps
+
+-- Used during lowering to check that an effect is not overwritten.
+reservedCapNames :: S.Set Text
+reservedCapNames = S.fromList ["ref", "exit"]

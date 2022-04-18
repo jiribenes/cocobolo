@@ -1,6 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Surface.Parser where
+module Surface.Parser
+    ( Surface.Parser.parse
+    , Surface.Parser.parseFile
+    ) where
 
 import qualified Control.Monad.Combinators.Expr
                                                as C
@@ -248,10 +251,11 @@ instance Show ParseException where
 instance Exception ParseException where
     displayException = coerce errorBundlePretty
 
-parseTopLevel :: String -> Text -> IO [Decl]
-parseTopLevel filename contents = case parse (prog <* eof) filename contents of
-    Left  err -> throwIO (ParseException err)
-    Right x   -> pure x
+parse :: String -> Text -> IO [Decl]
+parse filename contents =
+    case Text.Megaparsec.parse (prog <* eof) filename contents of
+        Left  err -> throwIO (ParseException err)
+        Right x   -> pure x
 
-parseFromFile :: String -> IO [Decl]
-parseFromFile filename = TIO.readFile filename >>= parseTopLevel filename
+parseFile :: String -> IO [Decl]
+parseFile filename = TIO.readFile filename >>= Surface.Parser.parse filename

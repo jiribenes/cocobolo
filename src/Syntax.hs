@@ -7,7 +7,32 @@
 {-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE FlexibleContexts #-}
 
-module Syntax where
+module Syntax
+    (
+    -- * Variable
+      Variable(..)
+    , _varText
+    , prettyVariableWithLoc
+
+     -- * Expressions
+    , Expr(..)
+    , UntypedExpr
+    , allVariables
+    , Pattern(..)
+    , Case(..)
+    , Literal(..)
+    , builtinCons
+
+     -- * Bindings
+    , Binding(..)
+    , _boundVar
+    , _boundExpr
+    , _boundType
+
+     -- * Definitions
+    , Definition(..)
+    , EffectDefinition(..)
+    ) where
 
 import           Data.Text                      ( Text )
 import           GHC.Generics                   ( Generic )
@@ -79,11 +104,11 @@ prettyVariableWithLoc (FakeVariable txt) =
 
 
 data Pattern var
-    = PatternVariable { patternVariable :: var }
+    = PatternVariable { _patternVariable :: var }
     | PatternBlank
-    | PatternLiteral Literal
-    | PatternSafe Capability (Pattern var)
-    | PatternCons { patternHead :: Pattern var, patternTail :: Pattern var }
+    | PatternLiteral { _patternLiteral :: Literal }
+    | PatternSafe { _patternCapability :: Capability, _patternInner :: Pattern var }
+    | PatternCons { _patternHead :: Pattern var, _patternTail :: Pattern var }
     deriving stock (Eq, Ord, Show, Data, Generic, Functor)
 
 data Case pat a = Case

@@ -4,11 +4,22 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 
-module Type where
+module Type
+    ( TV
+    , TypeId
+    , Type(..)
+    , Scheme(..)
+    , FreeTypeVars(..)
+    , Subst(..)
+    , Substitutable(..)
+    , Constraint(..)
+    , solvable
+    ) where
+
+import           Data.Data                      ( Data )
 import qualified Data.Map                      as M
 import qualified Data.Set                      as S
 import           Data.Text                      ( Text )
-import qualified Data.Text                     as T
 import           GHC.Generics                   ( Generic )
 import qualified Pretty
 import           Prettyprinter                  ( (<+>)
@@ -17,7 +28,6 @@ import           Prettyprinter                  ( (<+>)
 import qualified Prettyprinter                 as P
 
 import           Capability
-import Data.Data (Data)
 
 type TV = Text
 type TypeId = Text
@@ -81,15 +91,6 @@ instance FreeTypeVars TV where
 
 instance FreeTypeVars Scheme where
     ftv (Forall as t) = ftv t `S.difference` S.fromList as
-
-closeOver :: Type -> Scheme
-closeOver t = Forall (S.toList $ ftv t) t
-
-refreshScheme :: Scheme -> Scheme
-refreshScheme (Forall as t) = Forall bs (sub `apply` t)
-  where
-    sub = Subst $ M.fromList $ zip as (TVar . T.singleton <$> ['a' .. 'z'])
-    bs  = sub `apply` as
 
 data Constraint
     = CEq Type Type

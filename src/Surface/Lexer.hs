@@ -1,6 +1,26 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Surface.Lexer where
+module Surface.Lexer
+    ( Parser
+    , spaceConsumer
+    , lexeme
+    , symbol
+    , parens
+    , emptyParens
+    , brackets
+    , chevrons
+    , arrow
+    , lambda
+    , doubleArrow
+    , doubleColon
+    , identifier
+    , typeIdentifier
+    , capIdentifier
+    , keyword
+    , integer
+    , bool
+    , text
+    ) where
 
 import           Control.Monad                  ( void
                                                 , when
