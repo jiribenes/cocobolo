@@ -11,6 +11,7 @@
 
 module Infer
     ( infer
+    , InferError(..)
     ) where
 
 import           Control.Lens
@@ -73,7 +74,7 @@ data InferError
     = UnificationFail Type Type
     | InfiniteType TV Type
     | UnboundVariables [Variable] [Variable]
-    | UnsafeVariables [Variable] [(BaseCapability, Variable)]
+    | UnsafeVariables [Variable] [(Variable, BaseCapability)]
     deriving stock (Eq, Ord, Show)
 
 instance Pretty InferError where
@@ -94,7 +95,7 @@ instance Pretty InferError where
         (   "Unsafe variables during type inference for:"
         <+> PP.hsep (PP.punctuate PP.comma (PP.squotes . pretty <$> defNames))
         :   concatMap
-                (\(cap, var) ->
+                (\(var, cap) ->
                     [ PP.indent 4 (PP.align $ prettyVariableWithLoc var)
                     , "but the definition does not possess the capability:"
                     , PP.indent 4 (PP.squotes (pretty cap))

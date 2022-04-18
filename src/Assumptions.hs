@@ -40,7 +40,7 @@ import           Type                           ( Type )
 
 data Assumption
     = HasType Variable Type
-    | Safe BaseCapability Variable
+    | Safe Variable BaseCapability
   deriving stock (Show, Eq, Ord, Generic)
 
 isSafeA :: Assumption -> Bool
@@ -48,7 +48,7 @@ isSafeA HasType{} = False
 isSafeA Safe{}    = True
 
 isSafeWrt :: Capability -> Assumption -> Bool
-isSafeWrt cap (Safe baseCap _) | not (baseCap `capMember` cap) = True
+isSafeWrt cap (Safe _ baseCap) | not (baseCap `capMember` cap) = True
 isSafeWrt _ _ = False
 
 newtype Assumptions = Assumptions { unAssumptions :: [Assumption] }
@@ -61,15 +61,15 @@ typeAssumptions (Assumptions a) = mapMaybe go a
     go (HasType x t) = Just (x, t)
     go Safe{}        = Nothing
 
-safe :: Assumptions -> [(BaseCapability, Variable)]
+safe :: Assumptions -> [(Variable, BaseCapability)]
 safe (Assumptions a) = mapMaybe go a
   where
-    go (HasType _       _) = Nothing
-    go (Safe    baseCap x) = Just (baseCap, x)
+    go (HasType _ _      ) = Nothing
+    go (Safe    x baseCap) = Just (x, baseCap)
 
 containsVar :: Variable -> Assumption -> Bool
 containsVar x (HasType y _) | x == y = True
-containsVar x (Safe _ y) | x == y    = True
+containsVar x (Safe y _) | x == y    = True
 containsVar _ _                      = False
 
 singleton :: Variable -> Type -> Assumptions
@@ -84,7 +84,7 @@ extendMany (Assumptions a) bnds =
 
 makeSafeWrt :: Assumptions -> Capability -> Assumptions
 makeSafeWrt (Assumptions a) cap =
-    Assumptions $ [ Safe c x | c <- capList cap, HasType x _ <- a ] <> a
+    Assumptions $ [ Safe x c | c <- capList cap, HasType x _ <- a ] <> a
 
 remove :: Assumptions -> Variable -> Assumptions
 remove (Assumptions a) x = Assumptions irrelevant
@@ -121,5 +121,5 @@ keys as = nub $ fst <$> typeAssumptions as
 keysSet :: Assumptions -> S.Set Variable
 keysSet as = S.fromList $ fst <$> typeAssumptions as
 
-safeSet :: Assumptions -> S.Set (BaseCapability, Variable)
+safeSet :: Assumptions -> S.Set (Variable, BaseCapability)
 safeSet as = S.fromList $ safe as
