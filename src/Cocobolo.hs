@@ -1,4 +1,4 @@
-module Main where
+module Cocobolo (runCocobolo) where
 
 import           Prettyprinter                  ( pretty )
 import qualified Prettyprinter                 as PP
@@ -12,8 +12,8 @@ import qualified Infer
 import qualified Lower
 import qualified Surface.Parser                as Parser
 
-main :: IO ()
-main = putStrLn "TODO TODO TODO (use runFile or runTopLevel)"
+runCocobolo :: IO ()
+runCocobolo = putStrLn "TODO TODO TODO (use runFile or runTopLevel)"
 
 runTopLevel :: FilePath -> Text -> IO ()
 runTopLevel filename contents = do

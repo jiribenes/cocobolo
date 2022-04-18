@@ -1,0 +1,38 @@
+# HLint configuration file
+# https://github.com/ndmitchell/hlint
+##########################
+
+- functions: # Disabled functions
+  - {name: unsafePerformIO, within: []}
+  - {name: unsafeCoerce, within: []}
+  - {name: GHC.List.head, within: []}
+  - {name: GHC.List.tail, within: []}
+  - {name: GHC.List.init, within: []}
+  - {name: GHC.List.last, within: []}
+
+# Generalise map to fmap, ++ to <>
+- group: {name: generalise, enabled: true}
+
+# Custom hints:
+- error: {lhs: mapM, rhs: traverse, name: Generalize mapM}
+- error: {lhs: forM, rhs: for, name: Generalize forM}
+- error: {lhs: sequence, rhs: sequenceA, name: Generalize sequence}
+- error: {lhs: mapM_, rhs: traverse_, name: Generalize mapM_}
+- error: {lhs: forM_, rhs: for_, name: Generalize forM_}
+- error: {lhs: sequence_, rhs: sequenceA_, name: Generalize sequence_}
+- warning: {lhs: return, rhs: pure, name: Avoid return}  
+
+- warning: {lhs: "mappend x y", rhs: x <> y}
+- warning: {lhs: "fmap f ask", rhs: asks f}
+- warning: {lhs: "f <$> ask", rhs: asks f}
+- warning: {lhs: "maybe mempty f x", rhs: foldMap f x}
+
+# Ignore some builtin hints
+- ignore: {name: Use tuple-section}
+- ignore: {name: Use const}
+- ignore: {name: Use fmap}
+
+# Lower the severity of eta reduce
+- suggest: {name: Eta reduce}
+
+# Define some custom infix operators

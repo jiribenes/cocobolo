@@ -2,8 +2,8 @@
 
 ### TODO
 
-- [ ] cabal project
-- [ ] Nix project (generating a Docker image)
+- [x] cabal project
+- [x] Nix project (generating a Docker image)
 - [ ] argument parser
 - [ ] documentation
 - [ ] type parser for pointers and lists
