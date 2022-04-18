@@ -7,7 +7,7 @@ let aalloc =
     (x := 42;
     x)
 
-let aallocPepega =
+let aallocBad =
     var x := 5 in
     x := 42;
     x
