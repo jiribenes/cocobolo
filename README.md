@@ -2,12 +2,12 @@
 
 ### TODO
 
-[ ] cabal project
-[ ] Nix project (generating a Docker image)
-[ ] argument parser
-[ ] documentation
-[ ] type parser for pointers and lists
-[ ] merge `TSafe cap t` in constraints with existing safety in `t`
+- [ ] cabal project
+- [ ] Nix project (generating a Docker image)
+- [ ] argument parser
+- [ ] documentation
+- [ ] type parser for pointers and lists
+- [ ] merge `TSafe cap t` in constraints with existing safety in `t`
 
 ### Usage
 
