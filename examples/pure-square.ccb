@@ -1,0 +1,5 @@
+let pureSquare = safe (fun(safe x) => x * x)
+
+let safe sq(safe x) = x * x
+
+let safe addTwo(safe x) = x + 2

@@ -1,0 +1,8 @@
+let fibonacci(x : Int) : Int =
+    match x with
+    | 0 => 1
+    | _ => 
+        let head = x in
+        let id(z) = z in
+        let tail = fibonacci(x - 1) in
+        id(head) * id(tail)

@@ -1,0 +1,23 @@
+// let somePointer = var x := 42 in x
+// let safe escape = somePointer := 42; (!somePointer)
+// NOT SAFE because `somePointer` is "global"
+
+let safe<ref> foo(p) = (p := 100); (!p)
+let safe<ref> foosafer(safe<ref> p) = (p := 100); (!p)
+
+// let safe safeDeref(x) = deref(x)
+
+// let safe mutableFactorial(n) =
+//     var x := 1 in
+//     (!x) * n
+
+let safe<ref> alsoSafe(x, n) = (!x) * n
+ 
+let safe<ref> shouldNotBeSafeIGuess(safe<ref> x, n) = (!x) * n
+ 
+let safe ptr = var p := 42 in p
+// NOT SAFE
+
+let safe<ref> baz(ptr) = 
+    let inner(safe<ref> p) = p := 100
+    in inner(ptr)

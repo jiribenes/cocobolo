@@ -1,0 +1,15 @@
+let not(b) = 
+    match b with
+    | true => false
+    | false => true
+
+let even(x) =
+    match x with
+    | 0 => true
+    | _ => not(odd(x))
+
+let odd(x) =
+    match x with
+    | 0 => false
+    | _ => not(even(x))
+

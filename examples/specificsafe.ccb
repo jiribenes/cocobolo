@@ -1,0 +1,10 @@
+let safe<ref> foo = 
+    exit(42)
+
+let safe id(z) = 
+    z
+
+let safe<exit> fee = 
+    var x := 10 in 
+    x
+

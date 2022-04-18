@@ -1,0 +1,8 @@
+let assignAndBail(ptr) =
+    (ptr := (42 + 69));
+    ptr
+
+let assignAndBail42(ptr) =
+    ptr := (42 + 69);
+    ptr
+

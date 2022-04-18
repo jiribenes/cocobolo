@@ -1,0 +1,21 @@
+// should be safe
+let safstMapA(safe f, lst) =
+  match lst with
+  | [] => []
+  | (safe head :: tail) => f(safe head) :: safstMapA(safe f, tail)
+
+// same thing, but uses `let x = - in -`
+let safstMapB(safe f, lst) =
+  match lst with
+  | [] => []
+  | (safe head) :: tail => 
+    let newHead = f(safe head)      in
+    let newTail = safstMapB(safe f, tail) in
+    newHead :: newTail
+
+let safe square(safe x) = x * x
+
+let testList = safe 1 :: safe 2 :: safe 3 :: []
+
+let resultA = safstMapA(square, testList)
+let resultB = safstMapB(square, testList)

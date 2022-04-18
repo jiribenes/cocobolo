@@ -1,0 +1,7 @@
+let safe derefing(p) = !p
+
+let safe derefAdd(p) = !p + 42
+
+let safe assignDeref(p) =
+    (p := 42);
+    (!p)

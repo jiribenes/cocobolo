@@ -1,0 +1,1 @@
+let fmap(f, safe x) = safe f(x)

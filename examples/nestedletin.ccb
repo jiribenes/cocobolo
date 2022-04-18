@@ -1,0 +1,4 @@
+let result(y, w) =
+    let x = y in
+    let z = w in
+    x * z

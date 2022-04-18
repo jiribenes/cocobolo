@@ -1,0 +1,11 @@
+let safe identity(x) = x
+
+let brexit = exit(42)
+ 
+let safe safExit(x) = 
+    match identity with
+    | safe id => id(x)
+
+let foo =
+    let id(z) = z in
+    id(id(id))

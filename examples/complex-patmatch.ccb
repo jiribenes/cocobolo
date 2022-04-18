@@ -1,0 +1,18 @@
+let even(xs) =
+    match xs with
+    | [] => true
+    | x :: y :: zs => skip(zs)
+    | _ => false
+
+let evenones(xs) =
+    match xs with
+    | [] => true
+    | 1 :: 1 :: zs => skip(zs)
+    | _ => false
+
+let safeEvenones(xs) =
+    match xs with
+    | [] => true
+    | safe 1 :: safe 1 :: zs => skip(zs)
+    | _ => false
+

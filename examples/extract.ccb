@@ -1,0 +1,1 @@
+let extract(safe x) = x

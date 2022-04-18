@@ -1,0 +1,17 @@
+let k1(x, y) = x
+let k2(safe x, y) = x
+let k3(x, safe y) = x
+let k4(safe x, safe y) = x
+// let k5(x, y) = safe x               // 'x' unsafe
+let k6(safe x, y) = safe x
+// let k7(x, safe y) = safe x          // 'x' unsafe
+let k8(safe x, safe y) = safe x
+let safe k9(x, y) = x
+let safe k10(safe x, y) = x
+let safe k11(x, safe y) = x
+let safe k12(safe x, safe y) = x
+// let safe k13(x, y) = safe x         // 'x' unsafe
+let safe k14(safe x, y) = safe x
+// let safe k15(x, safe y) = safe x    // 'x' unsafe
+let safe k16(safe x, safe y) = safe x
+

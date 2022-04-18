@@ -1,0 +1,8 @@
+let      id1(safe x) = safe x
+let      id2(safe x) =      x
+let      id3(     x) = safe x /// unsafe 'x'
+let      id4(     x) =      x
+let safe id5(safe x) = safe x
+let safe id6(safe x) =      x
+let safe id7(     x) = safe x /// unsafe 'x'
+let safe id8(     x) =      x

@@ -1,0 +1,68 @@
+// let map(foo) =
+//     foo(fun(mapInner, f, list) => listElim(list, [], fun(x, xs) =>
+//         let tail = mapInner(f, xs) in f(x) :: tail
+//     ))
+// let map =
+//     fix(fun(mapInner, f, list) => listElim(list, [], fun(x, xs) =>
+//         let tail = mapInner(f, xs) in f(x) :: tail
+//     ))
+
+//let map(f, list) : List =
+//    listElim(list, [], fun(x, xs) =>
+//        let head = f(x) in let tail = map(f, xs) in head :: tail
+//    )
+
+// let k(x) = let f(y) = x in f
+// 
+// let hmm1(f, list) = 
+//     listElim(list, [], fun(x, xs) =>
+//         let head = f(x) in 
+//         let result = head :: [] in
+//         result
+//     )
+// 
+// let hmm2(f, list) =
+//     listElim(list, [], fun(x, xs) =>
+//         (fun(head) => (fun(result) => result)(head :: []))(f(x)))
+
+
+// let mmm(f, list) =
+//     match list with
+//     | [] => []
+//     | x :: xs =>
+//         let head = f(x) in
+//         let result = head :: [] in
+//         result
+
+// let map =
+//     fix(fun(mapInner, f, list) => listElim(list, [], fun(x, xs) =>
+//         let head = f(x) in head :: []
+//     ))
+// let tail = mapInner(f, xs) in 
+let map(f : Int -> Int, list : List) : List =
+    match list with
+    | []      => []
+    | x :: xs => 
+        let head = f(x) in
+        let tail = map(f, xs) in
+        head :: tail
+
+// let lessComplexMap(f, list) =
+//     listElim(list, [], fun(x, xs) => 
+//         let id(z) = z in
+//         let tail = lessComplexMap(f, xs) in
+//         id(f(x)) :: id(tail)
+//     )
+
+// This is my linked list!
+let complexMap(f : Int -> Int, list : List) : List =
+    match list with
+    | []      => []
+    | x :: xs => 
+        let head = f(x) in
+        let id(z) = z in
+        let fortytwo = 42 in
+        let tail = complexMap(f, xs) in
+        id(head) :: id(tail)
+
+

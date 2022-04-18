@@ -1,0 +1,18 @@
+let foo1(safe f, safe x) = safe f(x)
+let foo2(safe f, safe x) =      f(x)
+let foo3(safe f,      x) = safe f(x)
+let foo4(safe f,      x) =      f(x)
+let foo5(     f, safe x) = safe f(x)
+let foo6(     f, safe x) =      f(x)
+let foo7(     f,      x) = safe f(x)
+let foo8(     f,      x) =      f(x)
+
+let safe foo11(safe f, safe x) = safe f(x)
+let safe foo12(safe f, safe x) =      f(x)
+let safe foo13(safe f,      x) = safe f(x)
+let safe foo14(safe f,      x) =      f(x)
+let safe foo15(     f, safe x) = safe f(x)
+let safe foo16(     f, safe x) =      f(x)
+let safe foo17(     f,      x) = safe f(x)
+let safe foo18(     f,      x) =      f(x)
+

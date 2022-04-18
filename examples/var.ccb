@@ -1,0 +1,13 @@
+let alloc =
+    var x := 5 in
+    x
+
+let aalloc =
+    var x := 5 in
+    (x := 42;
+    x)
+
+let aallocPepega =
+    var x := 5 in
+    x := 42;
+    x

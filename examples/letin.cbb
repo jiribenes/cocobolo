@@ -1,0 +1,3 @@
+let square(x) : Int =
+    let result = x * x in
+        result

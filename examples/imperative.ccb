@@ -1,0 +1,3 @@
+let printAndReturn(x : Text) = 
+    print(x);
+    x

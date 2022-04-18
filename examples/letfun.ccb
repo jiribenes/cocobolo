@@ -1,0 +1,7 @@
+let square =
+    let inner(x) = x * x in
+    inner
+
+let id =
+    let inner(x) = x in
+    inner

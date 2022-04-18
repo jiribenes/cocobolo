@@ -1,0 +1,1 @@
+let ap(safe f, safe x) = safe f(x)
