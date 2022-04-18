@@ -13,33 +13,32 @@
 
 -- | This module is copied from Lily: https://github.com/jiribenes/lily
 module Control.Monad.Fresh
-  ( FreshState
-  , initialFreshState
-  , MonadFresh
-  , fresh
-  , setFresh
-  , getFresh
-  , FreshT
-  , evalFreshT
-  , runFreshT
-  , Fresh
-  , evalFresh
-  , runFresh
-  )
-where
+    ( FreshState
+    , initialFreshState
+    , MonadFresh
+    , fresh
+    , setFresh
+    , getFresh
+    , FreshT
+    , evalFreshT
+    , runFreshT
+    , Fresh
+    , evalFresh
+    , runFresh
+    ) where
 
 import           Control.Applicative
 import           Control.Lens
+import qualified Control.Lens.NonEmpty         as NE
 import           Control.Monad.Except
 import           Control.Monad.RWS
 import           Control.Monad.Reader
-import qualified Control.Monad.State.Strict as StrictS
-import qualified Control.Monad.State.Lazy as LazyS
+import qualified Control.Monad.State.Lazy      as LazyS
+import qualified Control.Monad.State.Strict    as StrictS
 import           Control.Monad.Trans.Maybe
 import           Control.Monad.Writer
 import           Data.Kind                      ( Type )
 import qualified Data.List.NonEmpty            as NE
-import qualified Control.Lens.NonEmpty         as NE
 import qualified Data.Text                     as T
 
 newtype FreshState n = FreshState { unFresh :: NE.NonEmpty n }
@@ -52,8 +51,8 @@ makeLensesFor [("unFresh", "_fresh")] ''FreshState
 -- and produces an infinite stream of @a@s of the form @$prefix$N@ where @$N@ is from 0 onwards.
 initialFreshState :: T.Text -> (T.Text -> a) -> FreshState a
 initialFreshState prefix f = FreshState
-  { unFresh = f . (prefix <>) . T.pack . show @Int <$> NE.iterate (+ 1) 0
-  }
+    { unFresh = f . (prefix <>) . T.pack . show @Int <$> NE.iterate (+ 1) 0
+    }
 
 -- | Monad transformer for 'MonadFresh'
 newtype FreshT n (m :: Type -> Type) a = FreshT { unFreshT :: StrictS.StateT (FreshState n) m a }
@@ -97,16 +96,16 @@ class (Monad m) => MonadFresh n m where
 
 -- the actual implementation
 instance Monad m => MonadFresh n (FreshT n m) where
-  fresh = FreshT $ do
-    _ <- _fresh <%= NE.fromList . NE.tail
-    use (_fresh . NE._head)
-  {-# INLINE fresh #-}
+    fresh = FreshT $ do
+        _ <- _fresh <%= NE.fromList . NE.tail
+        use (_fresh . NE._head)
+    {-# INLINE fresh #-}
 
-  setFresh = FreshT . put
-  {-# INLINE setFresh #-}
+    setFresh = FreshT . put
+    {-# INLINE setFresh #-}
 
-  getFresh = FreshT get
-  {-# INLINE getFresh #-}
+    getFresh = FreshT get
+    {-# INLINE getFresh #-}
 
 -- automatically derived transformer boilerplate
 instance MonadFresh n m => MonadFresh n (MaybeT m)
@@ -117,12 +116,12 @@ instance (Monoid w, MonadFresh n m) => MonadFresh n (WriterT w m)
 instance (Monoid w, MonadFresh n m) => MonadFresh n (RWST r w s m)
 
 instance MonadError e m => MonadError e (FreshT n m) where
-  throwError = lift . throwError
-  {-# INLINE throwError #-}
+    throwError = lift . throwError
+    {-# INLINE throwError #-}
 
--- this function has been fully written by hole-driven programming
-  catchError m h = FreshT $ catchError (unFreshT m) (unFreshT . h)
-  {-# INLINE catchError #-}
+  -- this function has been fully written by hole-driven programming
+    catchError m h = FreshT $ catchError (unFreshT m) (unFreshT . h)
+    {-# INLINE catchError #-}
 
 -- | Type synonym for using Fresh only 
 type Fresh n = FreshT n Identity

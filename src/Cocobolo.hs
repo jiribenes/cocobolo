@@ -1,4 +1,6 @@
-module Cocobolo (runCocobolo) where
+module Cocobolo
+    ( runCocobolo
+    ) where
 
 import           Prettyprinter                  ( pretty )
 import qualified Prettyprinter                 as PP

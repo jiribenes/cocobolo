@@ -23,7 +23,6 @@ tracePretty x = traceShow (pretty x)
 tracePrettyId :: Pretty a => a -> a
 tracePrettyId x = tracePretty x x
 
--- | Takes a 'Pretty' value in a 'Applicative' context
--- and prints it
+-- | Takes a 'Pretty' value in a 'Applicative' context and prints it
 tracePrettyM :: (Pretty a, Applicative f) => a -> f ()
 tracePrettyM x = traceShowM (pretty x)

@@ -1,8 +1,7 @@
 -- | This module is copied from Lily: https://github.com/jiribenes/lily
 module Control.Lens.NonEmpty
-  ( _head
-  )
-where
+    ( _head
+    ) where
 
 import           Control.Lens                   ( Lens' )
 import qualified Data.List.NonEmpty            as NE
