@@ -1,3 +1,4 @@
+-- | This module is copied from Lily: https://github.com/jiribenes/lily
 module Control.Lens.NonEmpty
   ( _head
   )

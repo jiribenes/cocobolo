@@ -1,6 +1,8 @@
 {-| This module contains small, yet useful utility
 functions which work like the functions from 'Debug.Trace',
 but they are adapted to work on 'Pretty' values.
+
+This module is copied from Lily: https://github.com/jiribenes/lily
 -}
 module Debug.Trace.Pretty
     ( tracePretty

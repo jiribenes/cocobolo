@@ -13,3 +13,8 @@
 
 Hope that you have all the necessary Cabal packages and call `cd src/ && ghci Main.hs`.
 Then call the function `runFile "../examples/safeMap.ccb"` to test it out.
+
+### Notice
+
+Some of the utility modules are copied from
+the [Lily](https://github.com/jiribenes/lily) project by the same author.

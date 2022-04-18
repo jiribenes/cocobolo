@@ -11,6 +11,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE GADTs #-} -- used for (~) constraint only
 
+-- | This module is copied from Lily: https://github.com/jiribenes/lily
 module Control.Monad.Fresh
   ( FreshState
   , initialFreshState
@@ -46,8 +47,9 @@ newtype FreshState n = FreshState { unFresh :: NE.NonEmpty n }
 -- makes a lens `_fresh` for getting the contents of `FreshState`
 makeLensesFor [("unFresh", "_fresh")] ''FreshState
 
--- | An initial 'FreshState' of 'Name's.
--- Produces an infinite stream of 'Name's of the form @t$N@ where @$N@ is from 0 onwards.
+-- | An initial 'FreshState' of @a@s.
+-- Takes a @$prefix@ as a 'Text' and a function from 'Text' to your type @a@
+-- and produces an infinite stream of @a@s of the form @$prefix$N@ where @$N@ is from 0 onwards.
 initialFreshState :: T.Text -> (T.Text -> a) -> FreshState a
 initialFreshState prefix f = FreshState
   { unFresh = f . (prefix <>) . T.pack . show @Int <$> NE.iterate (+ 1) 0
