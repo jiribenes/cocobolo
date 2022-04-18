@@ -12,4 +12,3 @@ niceIndent doc = P.hardline P.<+> P.indent 3 doc
 withIndentPerhaps :: P.Doc ann -> P.Doc ann
 withIndentPerhaps doc = P.group (P.flatAlt (niceIndent doc) (P.space <> doc))
 
-

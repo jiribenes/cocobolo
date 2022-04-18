@@ -29,7 +29,7 @@ import qualified Prettyprinter                 as PP
 
 import qualified Assumptions                   as A
 import           Capability
-import           Fresh
+import           Control.Monad.Fresh
 import           Syntax
 import           Type
 

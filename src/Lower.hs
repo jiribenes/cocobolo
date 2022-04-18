@@ -21,8 +21,8 @@ import qualified Data.List.NonEmpty            as NE
 import           Prettyprinter                  ( Pretty(..) )
 
 import           Capability                     ( reservedCapNames )
+import           Control.Monad.Fresh
 import qualified Data.Set                      as S
-import           Fresh
 import qualified Prettyprinter                 as PP
 import           Surface.Loc
 import qualified Surface.Surface               as S

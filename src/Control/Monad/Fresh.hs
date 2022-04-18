@@ -11,7 +11,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE GADTs #-} -- used for (~) constraint only
 
-module Fresh
+module Control.Monad.Fresh
   ( FreshState
   , initialFreshState
   , MonadFresh
