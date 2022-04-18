@@ -181,9 +181,8 @@ instance Pretty Literal where
     pretty NilLiteral          = "[]"
 
 instance (Pretty pat, Pretty a) => Pretty (Case pat a) where
-    pretty (Case pattern consequence) =
-        "|" <+> pretty pattern <+> "=>" <> withIndentPerhaps
-            (pretty consequence)
+    pretty (Case pat consequence) =
+        "|" <+> pretty pat <+> "=>" <> withIndentPerhaps (pretty consequence)
 
 builtinCons :: Expr t -> Expr t -> Expr t
 builtinCons eHead = App (App (Var "#cons") eHead)

@@ -31,6 +31,7 @@
 - ignore: {name: Use tuple-section}
 - ignore: {name: Use const}
 - ignore: {name: Use fmap}
+- ignore: {name: Use <$>}
 
 # Lower the severity of eta reduce
 - suggest: {name: Eta reduce}
