@@ -229,6 +229,7 @@ parseMatch = do
 parseSimpleType :: Parser Type
 parseSimpleType = choice
     [ parens parseType
+    , TypeList <$> brackets parseType
     , TypeConstructor <$> loc typeIdentifier
     , TypeVariable <$> loc identifier
     ]
@@ -237,8 +238,11 @@ parseType :: Parser Type
 parseType = C.makeExprParser parseSimpleType typeOperatorTable
 
 typeOperatorTable :: [[C.Operator Parser Type]]
-typeOperatorTable = [[binaryRAssoc arrow TypeArrow]]
-    where binaryRAssoc p make = C.InfixR (make <$ p)
+typeOperatorTable =
+    [[prefixOp (symbol "^") TypeRef], [binaryRAssoc arrow TypeArrow]]
+  where
+    binaryRAssoc p make = C.InfixR (make <$ p)
+    prefixOp p make = C.Prefix (make <$ p)
 
 prog :: Parser [Decl]
 prog = many (spaceConsumer *> decl <* spaceConsumer <* many newline)

@@ -178,6 +178,8 @@ lowerType (S.TypeArrow t1 t2) = do
     t2' <- lowerType t2
     pure $ t1' :-> t2'
 lowerType (S.TypeVariable locId) = pure $ TVar $ locThing locId
+lowerType (S.TypeList     t    ) = TList <$> lowerType t
+lowerType (S.TypeRef      t    ) = TRef <$> lowerType t
 
 data SingleDefinition = SingleDefinition Variable UntypedExpr
 

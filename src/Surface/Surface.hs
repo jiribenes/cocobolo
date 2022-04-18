@@ -75,6 +75,8 @@ data Type
     = TypeConstructor TypeId
     | TypeArrow Type Type
     | TypeVariable TypeId
+    | TypeList Type
+    | TypeRef Type
     deriving stock (Eq, Ord, Show, Generic)
 
 instance Pretty BinOp where
@@ -147,6 +149,8 @@ instance Pretty Type where
         P.parens (pretty t1) <+> "->" <+> pretty t2
     pretty (TypeArrow t1 t2) = pretty t1 <+> "->" <+> pretty t2
     pretty (TypeVariable x ) = pretty x
+    pretty (TypeList     t ) = P.brackets (pretty t)
+    pretty (TypeRef      t ) = "^" <> pretty t
 
 prettyEffectArm :: EffectArm -> P.Doc ann
 prettyEffectArm (name, maybeParams, maybeType) =

@@ -1,0 +1,7 @@
+effect amb with
+| choose : [a] -> a
+
+let safe<ref,exit> ambool() =
+    choose (true :: false :: [])
+
+let safe shouldError = ambool
