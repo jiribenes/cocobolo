@@ -11,8 +11,11 @@
 
 ### Usage
 
-Hope that you have all the necessary Cabal packages and call `cd src/ && ghci Main.hs`.
-Then call the function `runFile "../examples/safeMap.ccb"` to test it out.
+Use GHC 8.10.7 (either directly or via Nix).
+
+Call `cabal update` to update your dependencies and then 
+(as a temporary measure) call `cabal repl` in your shell to open the REPL.
+Then call the function `runFile "examples/safeMap.ccb"` to test the example out.
 
 ### Notice
 
