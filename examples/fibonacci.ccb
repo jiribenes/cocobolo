@@ -1,7 +1,4 @@
-let fibonacci(x : Int) : Int =
-    match x with
+let fibonacci(n) =
+    match n with
     | 0 => 1
-    | _ => 
-        let head = x in
-        let tail = fibonacci(x - 1) in
-        head * tail
+    | _ => n * fibonacci(n - 1)

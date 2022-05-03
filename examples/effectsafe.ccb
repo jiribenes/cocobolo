@@ -1,0 +1,8 @@
+let safe id(z) = z
+
+let safe<ref> bye = 
+    exit(42)
+
+let safe<exit> ten = 
+    var x := 10 in 
+    x

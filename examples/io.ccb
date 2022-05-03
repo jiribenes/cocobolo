@@ -8,4 +8,4 @@ let safe square(safe x) = x * x
 let safe<ref,exit> squarePrint(safe<ref,exit> x) =
     let y = x * x in printNumber(y) ; y
 
-let safe shouldFail = print("foo")
+let safe shouldFail = squarePrint(42)
