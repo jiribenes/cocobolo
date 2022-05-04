@@ -1,0 +1,3 @@
+let safe<ref> shouldFail = 
+    var x := 42 in
+    x

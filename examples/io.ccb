@@ -1,11 +1,11 @@
 effect io with
-| print(x : Text) : Unit
-| read() : Text 
 | printNumber(x : Int) : Unit
 
 let safe square(safe x) = x * x
 
 let safe<ref,exit> squarePrint(safe<ref,exit> x) =
-    let y = x * x in printNumber(y) ; y
+    let y = square(x) in
+    printNumber(y) ;
+    y
 
-let safe shouldFail = squarePrint(42)
+let safe shouldFail = squarePrint(6)
