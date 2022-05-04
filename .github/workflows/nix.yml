@@ -1,0 +1,28 @@
+name: Nix CI
+
+# Trigger the workflow on push or pull request, but only for the master branch
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+jobs:
+  build:
+    name: ghc ${{ matrix.ghc }}
+    runs-on: ubuntu-latest
+    if: "! contains(toJSON(github.event.commits.*.message), '[skip-ci]')" # respects [skip-ci]
+    strategy:
+        matrix:
+            ghc:
+                - "ghc8107"  
+
+    steps:
+    - uses: actions/checkout@v2
+      if: github.event.action == 'opened' || github.event.action == 'synchronize' || github.event.ref == 'refs/heads/master'
+
+    - uses: cachix/install-nix-action@v16
+      name: Setup Nix
+
+    - name: Build
+      run: |
+        nix-build --argstr compiler "${{ matrix.ghc }}" --attr cocobolo default.nix  
