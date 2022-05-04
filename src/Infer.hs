@@ -308,6 +308,7 @@ infer
     -> Either InferError [Definition Scheme]
 infer effs = runInfer allCapabilities . go initialEnv
   where
+    -- TODO: rename
     hmm :: Definition Scheme -> M.Map Variable (Capability, Scheme)
     hmm (Define defs) =
         let extractSafe scheme = case scheme of

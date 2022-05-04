@@ -15,7 +15,7 @@ source-repository head
   location:         https://github.com/jiribenes/cocobolo.git
 
 common common-options
-  build-depends:       base >= 4.13 && < 5, lens, containers, unordered-containers, mtl, transformers, text, prettyprinter, optparse-applicative, megaparsec, parser-combinators
+  build-depends:       base >= 4.13 && < 5, lens, containers, unordered-containers, mtl, transformers, text, prettyprinter, optparse-applicative, megaparsec, parser-combinators, directory
   
   ghc-options:         -Wall
                        -Wcompat
@@ -38,6 +38,7 @@ library
   import:              common-options
   hs-source-dirs:      src
   exposed-modules:     Cocobolo,
+                       Options,
                        Assumptions,
                        Capability,
                        Infer,
