@@ -3,6 +3,9 @@
 {-# LANGUAGE DerivingStrategies #-}
 
 -- | This module takes care of parsing and storing command-line arguments.
+--
+-- This module is adapted from Lily: https://github.com/jiribenes/lily
+-- (though it has been heavily modified)
 module Options
     ( Command(..)
     , Options

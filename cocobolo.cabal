@@ -52,8 +52,7 @@ library
                        Type
 
   other-modules:       Control.Monad.Fresh, 
-                       Control.Lens.NonEmpty,
-                       Debug.Trace.Pretty
+                       Control.Lens.NonEmpty
 
 executable cocobolo
   import:              common-options

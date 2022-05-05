@@ -1,5 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
+-- | The parser module for Cocobolo (surface) syntax.
+-- Uses the @megaparsec@ parser combinator library.
 module Surface.Parser
     ( Surface.Parser.parse
     , Surface.Parser.parseFile
@@ -17,11 +19,11 @@ import           Control.Exception              ( Exception
                                                 )
 import           Control.Exception.Base         ( Exception(displayException) )
 import           Data.Coerce                    ( coerce )
+import           Data.Maybe                     ( fromMaybe )
+import qualified Data.Set                      as S
 import qualified Data.Text.IO                  as TIO
 
 import           Capability
-import           Data.Maybe                     ( fromMaybe )
-import qualified Data.Set                      as S
 import           Surface.Lexer
 import           Surface.Loc
 import           Surface.Surface
@@ -30,6 +32,7 @@ import           Syntax                         ( Case(..)
                                                 , Pattern(..)
                                                 )
 
+-- | Helpful combinator for parsing a located term.
 loc :: Parser a -> Parser (Loc a)
 loc p = do
     start  <- getSourcePos
@@ -37,6 +40,7 @@ loc p = do
     end    <- getSourcePos
     pure $ Loc result (newRangeUnchecked start end)
 
+-- | Parser for 'Literal's.
 literal :: Parser Literal
 literal = choice
     [ IntLiteral <$> integer
@@ -46,6 +50,7 @@ literal = choice
     , UnitLiteral <$ try emptyParens
     ]
 
+-- | Parser for basic expressions (terms).
 term :: Parser Expr
 term = choice
     [ Literal <$> literal
@@ -58,6 +63,8 @@ term = choice
     , exit
     ]
 
+-- | Helpful function for parsing a `safe<...>` prefix
+-- returning a 'C.Operator'.
 prefixSafe :: (Loc Capability -> a -> a) -> C.Operator Parser a
 prefixSafe ctor = C.Prefix $ do
     cap <- loc $ do
@@ -68,8 +75,11 @@ prefixSafe ctor = C.Prefix $ do
     let cap' = fromMaybe noCap <$> cap
     pure $ \rest -> ctor cap' rest
 
+-- | Handy data type for denoting associativity of an operation.
 data Assoc = LAssoc | RAssoc | NAssoc
 
+-- | Table of operators which is later used for parsing expressions.
+-- Denotes associativity, arity and precedence.
 operatorTable :: [[C.Operator Parser Expr]]
 operatorTable =
     [ [postfixFnCall]
@@ -108,12 +118,16 @@ operatorTable =
         args <- fnCall expr
         pure $ \fn -> Call fn args
 
+-- | Parser for a function call.
 fnCall :: Parser a -> Parser [a]
 fnCall p = parens (sepBy p (symbol ","))
 
+-- | Expression parser using the operators defined in 'operatorTable'
+-- with a 'term' as a basic unit.
 expr :: Parser Expr
 expr = C.makeExprParser term operatorTable
 
+-- | Parses an exit expression.
 exit :: Parser Expr
 exit = do
     Loc _ range <- loc $ keyword "exit"
@@ -122,12 +136,15 @@ exit = do
     _           <- symbol ")"
     pure $ Exit body range
 
+-- | Parses an optional type annotation.
 annot :: Parser (Maybe Type)
 annot = optional (symbol ":" *> parseType)
 
+-- | Parses a parameter ('Param').
 param :: Parser Param
 param = Param <$> safety <*> loc identifier <*> annot
 
+-- | Parses the general 'Safety' type.
 safety :: Parser Safety
 safety = do
     result <- optional $ do
@@ -142,6 +159,7 @@ safety = do
             Nothing  -> ExplicitSafe noCap
             Just cap -> ExplicitSafe cap
 
+-- | Parses a let expression.
 letin :: Parser Expr
 letin = do
     _      <- keyword "let"
@@ -154,6 +172,7 @@ letin = do
     rest   <- expr
     pure $ LetIn s name params body rest
 
+-- | Parses a variable declaration expression.
 vardecl :: Parser Expr
 vardecl = do
     _           <- keyword "var"
@@ -164,6 +183,7 @@ vardecl = do
     rest        <- expr
     pure $ VarDecl name body rest range
 
+-- | Parses a lambda abstraction.
 lam :: Parser Expr
 lam = do
     _      <- keyword "fun" <|> lambda
@@ -172,6 +192,7 @@ lam = do
     body   <- expr
     pure $ Lam params body
 
+-- | Parses a declaration ('Decl').
 decl :: Parser Decl
 decl = choice [parseLet, parseEffect]
   where
@@ -199,6 +220,7 @@ decl = choice [parseLet, parseEffect]
         maybeAnnot <- annot
         pure (name, params, maybeAnnot)
 
+-- | Parser for basic patterns ('Pattern').
 parseSimplePattern :: Parser (Pattern Id)
 parseSimplePattern = choice
     [ parens parsePattern
@@ -207,6 +229,9 @@ parseSimplePattern = choice
     , PatternVariable <$> loc identifier
     ]
 
+-- | Operator table for patterns.
+--
+-- See more details about operator tables in the documentation for 'operatorTable'.
 patternOperatorTable :: [[C.Operator Parser (Pattern Id)]]
 patternOperatorTable =
     [ [prefixSafe (PatternSafe . locThing)]
@@ -214,9 +239,12 @@ patternOperatorTable =
     ]
     where binaryRAssoc p make = C.InfixR (make <$ p)
 
+-- | General pattern parser, uses the operator table 'patternOperatorTable'
+-- and 'parseSimplePattern' as a basic expression.
 parsePattern :: Parser (Pattern Id)
 parsePattern = C.makeExprParser parseSimplePattern patternOperatorTable
 
+-- | Parses a pattern matching expression.
 parseMatch :: Parser Expr
 parseMatch = do
     _      <- keyword "match"
@@ -226,6 +254,7 @@ parseMatch = do
     pure $ Match target arms
     where parseMatchArm = Case <$> parsePattern <*> (doubleArrow *> expr)
 
+-- | Parses a basic type ('Type').
 parseSimpleType :: Parser Type
 parseSimpleType = choice
     [ parens parseType
@@ -234,9 +263,14 @@ parseSimpleType = choice
     , TypeVariable <$> loc identifier
     ]
 
+-- | Parse a general type using 'typeOperatorTable' operator table
+-- and 'parseSimpleType' as the basic building block.
 parseType :: Parser Type
 parseType = C.makeExprParser parseSimpleType typeOperatorTable
 
+-- | Operator table for types.
+--
+-- See more details about operator tables in the documentation for 'operatorTable'.
 typeOperatorTable :: [[C.Operator Parser Type]]
 typeOperatorTable =
     [[prefixOp (symbol "^") TypeRef], [binaryRAssoc arrow TypeArrow]]
@@ -244,9 +278,12 @@ typeOperatorTable =
     binaryRAssoc p make = C.InfixR (make <$ p)
     prefixOp p make = C.Prefix (make <$ p)
 
+-- | Top-level parser of declarations.
 prog :: Parser [Decl]
 prog = many (spaceConsumer *> decl <* spaceConsumer <* many newline)
 
+-- | Thin wrapper over 'ParseErrorBundle'
+-- to signify a lexer/parser error.
 newtype ParseException = ParseException (ParseErrorBundle Text Void)
 
 instance Show ParseException where
@@ -255,11 +292,14 @@ instance Show ParseException where
 instance Exception ParseException where
     displayException = coerce errorBundlePretty
 
+-- | Top-level parsing function.
 parse :: String -> Text -> IO [Decl]
 parse filename contents =
     case Text.Megaparsec.parse (prog <* eof) filename contents of
         Left  err -> throwIO (ParseException err)
         Right x   -> pure x
 
+-- | Top-level parsing function for a given filename.
+-- Reads the file and then calls 'parse'.
 parseFile :: String -> IO [Decl]
 parseFile filename = TIO.readFile filename >>= Surface.Parser.parse filename

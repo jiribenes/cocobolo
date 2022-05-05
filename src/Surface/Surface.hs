@@ -2,6 +2,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 
+-- | This module defines the surface syntax of Cocobolo.
 module Surface.Surface
     ( Id
     , TypeId
@@ -34,15 +35,19 @@ import           Syntax                         ( Case(..)
 type Id = Loc Text
 type TypeId = Loc Text
 
+-- | Binary operations.
 data BinOp = Add | Sub | Mul | Div | Cons | Assign
     deriving stock (Eq, Ord, Show, Generic)
 
+-- | Unary operations.
 data UnOp = Safe Capability | Deref
     deriving stock (Eq, Ord, Show, Generic)
 
+-- | Safety is either explicit with a given capability or implicit.
 data Safety = ExplicitSafe Capability | ImplicitUnsafe
     deriving stock (Eq, Ord, Show, Generic)
 
+-- | Representation of a function parameter.
 data Param = Param
     { paramSafety :: Safety
     , paramId     :: Id
@@ -50,6 +55,7 @@ data Param = Param
     }
     deriving stock (Eq, Ord, Show, Generic)
 
+-- | The main data type for an expression
 data Expr
     = Literal Literal
     | Identifier Id
@@ -64,13 +70,19 @@ data Expr
     | Exit Expr Range     -- has explicit range because of lowering
     deriving stock (Eq, Ord, Show, Generic)
 
+-- | The "arm" of an effect declaration
+--
+-- @| identifier(pa, ra, me, ters) : PossibleType@
 type EffectArm = (Id, Maybe [Param], Maybe Type)
 
+-- | The main data type for a declaration:
+-- either a let declaration or an effect declaration.
 data Decl
     = Let Safety Id (Maybe [Param]) (Maybe Type) Expr
     | Effect Id [EffectArm]
     deriving stock (Eq, Ord, Show, Generic)
 
+-- | The main data type for a representation of a syntax of Cocobolo type.
 data Type
     = TypeConstructor TypeId
     | TypeArrow Type Type
@@ -78,6 +90,10 @@ data Type
     | TypeList Type
     | TypeRef Type
     deriving stock (Eq, Ord, Show, Generic)
+
+-- 
+-- The rest of this module are just plain pretty-printer instances.
+--
 
 instance Pretty BinOp where
     pretty Add    = "+"
@@ -100,12 +116,13 @@ instance Pretty Param where
             Just typ -> [":" <+> pretty typ]
             Nothing  -> []
 
--- TODO: this double-spaces, fix it 
 instance Pretty Safety where
     pretty (ExplicitSafe cap) | cap == noCap = "safe"
                               | otherwise    = "safe<" <> pretty cap <> ">"
     pretty ImplicitUnsafe = mempty
 
+-- | Pretty-prints a block of expressions.
+-- The first argument is used as an accumulator.
 prettyBlock :: [P.Doc ann] -> Expr -> P.Doc ann
 prettyBlock prevs (Seq e1 e2 _) = prettyBlock ((pretty e1 <> ";") : prevs) e2
 prettyBlock prevs (VarDecl x e1 e2 _) =

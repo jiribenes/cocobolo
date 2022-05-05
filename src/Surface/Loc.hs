@@ -4,11 +4,11 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE OverloadedStrings #-}
 
+-- | This tiny module represents a source-code location
 module Surface.Loc
     ( Range(..)
     , newRange
     , newRangeUnchecked
-    , includes
     , Loc(..)
     ) where
 
@@ -19,6 +19,7 @@ import           Text.Megaparsec.Pos            ( SourcePos(..)
                                                 , unPos
                                                 )
 
+-- | Represents a source-code range: two positions in a file and a filename
 data Range = Range
     { rangeStart :: SourcePos
     , rangeEnd   :: SourcePos
@@ -26,6 +27,8 @@ data Range = Range
     }
     deriving stock (Eq, Show, Ord, Data, Generic)
 
+-- | Pretty-printing instance for 'Range',
+-- attempts to write a shorthand notation if the two positions are on the same line.
 instance Pretty Range where
     pretty (Range (SourcePos _ startLine startCol) (SourcePos _ endLine endCol) file)
         | startLine == endLine
@@ -47,10 +50,14 @@ instance Pretty Range where
             <> ":"
             <> pretty (unPos endCol)
 
+-- | Creates a new 'Range', fails if the two 'SourcePos'
+-- don't share a filename!
 newRange :: SourcePos -> SourcePos -> Maybe Range
 newRange a b | sourceName a == sourceName b = Just (newRangeUnchecked a b)
              | otherwise                    = Nothing
 
+-- | Creates a new 'Range' from two 'SourcePos'.
+-- Does not check anything, please use 'newRange' instead, if possible.
 newRangeUnchecked :: SourcePos -> SourcePos -> Range
 newRangeUnchecked a b = Range start end (sourceName a)
   where
@@ -60,10 +67,8 @@ newRangeUnchecked a b = Range start end (sourceName a)
 instance Semigroup Range where
     Range a _ l <> Range _ b _ = Range a b l
 
-includes :: Range -> Range -> Bool
-includes (Range bigStart bigEnd l) (Range smallStart smallEnd l') =
-    l == l' && smallStart >= bigStart && smallEnd <= bigEnd
-
+-- | 'Loc' represents a thing together with a 'Range'.
+-- Commonly used for AST nodes that hold a location.
 data Loc a = Loc
     { locThing :: a
     , locRange :: Range
