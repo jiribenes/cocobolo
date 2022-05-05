@@ -4,6 +4,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 
+-- | This module contains definitions necessary for the type system.
 module Type
     ( TV
     , TypeId
@@ -34,11 +35,15 @@ type TypeId = Text
 
 infixr 2 :->
 
+-- | Representation of types.
 data Type
     = Type :-> Type
+        -- ^ function type
     | TVar TV
+        -- ^ type variable
     | TList Type
     | TSafe Capability Type
+        -- ^ safe type with respect to a set of 'Capability'-ies
     | TRef Type
     | TText
     | TInt
@@ -61,6 +66,9 @@ instance Pretty Type where
     pretty TBool         = "Bool"
     pretty TUnit         = "Unit"
 
+-- | A type scheme, alternatively a polytype is of the form:
+--
+-- @forall x1 x2... xn . type@
 data Scheme = Forall [TV] Type
     deriving stock (Eq, Ord, Show, Generic)
 
@@ -72,7 +80,9 @@ instance Pretty Scheme where
             <>  "."
             <>  Pretty.withIndentPerhaps (pretty t)
 
+-- | Type class for everything which has free type variables inside.
 class FreeTypeVars a where
+    -- | Returns the free type variables of @a@
     ftv :: a -> S.Set TV
 
 instance FreeTypeVars a => FreeTypeVars (S.Set a) where
@@ -92,10 +102,14 @@ instance FreeTypeVars TV where
 instance FreeTypeVars Scheme where
     ftv (Forall as t) = ftv t `S.difference` S.fromList as
 
+-- | Type constraints.
 data Constraint
     = CEq Type Type
+        -- ^ Equality constraint
     | CExpInst Type Scheme
+        -- ^ Explicit instance constraint
     | CImpInst Type (S.Set TV) Type
+        -- ^ Implicit instance constraint
   deriving stock (Eq, Ord, Show, Generic)
 
 instance Pretty Constraint where
@@ -108,12 +122,14 @@ instance Pretty Constraint where
             <>  "}"
             <+> pretty t2
 
+-- | Returns if the constraint is solvable.
 solvable :: (Constraint, [Constraint]) -> Bool
 solvable (CEq{}     , _) = True
 solvable (CExpInst{}, _) = True
 solvable (CImpInst _ monos t2, cs) =
     S.null $ (ftv t2 `S.difference` ftv monos) `S.intersection` atv cs
 
+-- | Type substitution: maps a type variable ('TV') to a 'Type'.
 newtype Subst = Subst { unSubst :: M.Map TV Type }
   deriving stock (Eq, Ord, Show, Generic)
 
@@ -128,6 +144,7 @@ instance Semigroup Subst where
 instance Monoid Subst where
     mempty = Subst mempty
 
+-- | Type class for anything in which a type variable can be substituted for a type.
 class Substitutable a where
     apply :: Subst -> a -> a
 
@@ -167,7 +184,9 @@ instance Substitutable Constraint where
 instance Substitutable a => Substitutable [a] where
     apply = fmap . apply
 
+-- | Type class for anything which has active type variables.
 class ActiveTypeVars a where
+    -- | Returns the set of active type variables.
     atv :: a -> S.Set TV
 
 instance ActiveTypeVars Constraint where
