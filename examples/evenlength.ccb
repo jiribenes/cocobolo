@@ -1,0 +1,6 @@
+// returns true if the list on input has even length
+let even(xs) =
+    match xs with
+    | [] => true
+    | x :: y :: zs => even(zs)
+    | _ => false

@@ -1,1 +1,2 @@
+// basic function application
 let apply(f, x) = f(x)

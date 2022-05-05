@@ -1,1 +1,0 @@
-let foo(f) = fun (safe x) => f(x)

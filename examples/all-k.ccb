@@ -1,3 +1,7 @@
+// this file has all of the possible variations
+// of the K combinator from lambda calculus
+// ('const' in Haskell)
+
 let k1(x, y) = x
 let k2(safe x, y) = x
 let k3(x, safe y) = x

@@ -1,5 +1,0 @@
-let id(x) = x
-
-let identity = 
-    let inner(x) = id(x)
-    in id(inner)

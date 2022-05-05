@@ -1,0 +1,11 @@
+// This is a classic `map` function
+// which takes a function, a list
+// and applies the function to every member of the list.
+
+let map(f, list) =
+    match list with
+    | []      => []
+    | x :: xs => 
+        let head = f(x) in
+        let tail = map(f, xs) in
+        head :: tail

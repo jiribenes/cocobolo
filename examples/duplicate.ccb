@@ -1,1 +1,4 @@
+// CA => C(CA)
+// comonadic extract function
+
 let duplicate(safe x) = safe (safe x)

@@ -1,3 +1,6 @@
+// all variations of apply ($) in Haskell
+// with respect to safety
+
 let foo1(safe f, safe x) = safe f(x)
 let foo2(safe f, safe x) =      f(x)
 let foo3(safe f,      x) = safe f(x)

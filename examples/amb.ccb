@@ -1,7 +1,13 @@
+// The effect 'amb' is commonly used in the algebraic effects
+// community as it represents randomness and/or nondeterminism,
+// depending on the implementation.
+
 effect amb with
 | choose : [a] -> a
 
+// returns a random/nondeterministic boolean
 let safe<ref,exit> ambool() =
     choose (true :: false :: [])
 
+// this expression should error since 'ambool' is clearly 'amb'-unsafe...
 let safe shouldError = ambool

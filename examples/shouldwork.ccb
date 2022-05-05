@@ -1,4 +1,0 @@
-// let safe doStuff(p) =
-//     (!p) + 42
-
-let safe ptr = var p := 42 in p

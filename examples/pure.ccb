@@ -1,1 +1,4 @@
+// this corresponds to monadic unit: A => MA
+// such a function is not valid in our system
+
 let pure(x) = safe x

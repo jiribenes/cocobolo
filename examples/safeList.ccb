@@ -1,1 +1,0 @@
-let sfeList = safe 1 :: safe 2 :: safe 3 :: []

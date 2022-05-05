@@ -1,23 +1,19 @@
-// let safElimA(safe f, lst) = listElim(lst, [], fun(head, tail) => f(head) :: safElimA(safe f, tail))
-// let safElimB(safe f, lst) = 
-//     listElim(lst, [], fun(head, tail) => 
-//         let newTail = safElimB(safe f, tail) in
-//         f(head) :: newTail)
-
-let safMap(safe f, lst) =
+// this map takes a safe function: if you give it a pure function
+// together with a list of safe elements, it returns a list of safe elements
+let sMap(safe f, lst) =
   match lst with
   | [] => []
   | (head :: tail) => 
     let newHead = f(head)           in
-    let newTail = safMap(safe f, tail) in
+    let newTail = sMap(safe f, tail) in
     newHead :: newTail
 
 let testList = 1 :: 2 :: 3 :: []
 let safe square(x) = x * x
-let saf = safMap(safe square, testList)
+let saf = sMap(safe square, testList)
 
-let safe saferSquare(safe x) = x * x
+let safe sSquare(safe x) = x * x
 let testSafeList = safe 1 :: safe 2 :: safe 3 :: []
-let saf2 = safMap(safe saferSquare, testSafeList)
+let saf2 = sMap(safe sSquare, testSafeList)
 
 

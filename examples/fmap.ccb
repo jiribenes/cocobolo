@@ -1,1 +1,4 @@
+// this definition will error as safety is not a so-called "strong" comonad
+// this also means that it is not definable in Haskell!
+
 let fmap(f, safe x) = safe f(x)

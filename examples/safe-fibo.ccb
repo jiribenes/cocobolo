@@ -1,4 +1,0 @@
-let fibonacci(x) =
-    match x with
-    | safe 0 => 1
-    | safe _ => x * fibonacci(x - 1)

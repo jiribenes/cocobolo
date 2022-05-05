@@ -1,3 +1,5 @@
+// this file contains all the possible safety typings
+// of the identity function
 let      id1(safe x) = safe x
 let      id2(safe x) =      x
 let      id3(     x) = safe x /// unsafe 'x'

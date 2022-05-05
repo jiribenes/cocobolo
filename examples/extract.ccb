@@ -1,1 +1,4 @@
+// CA => A
+// comonadic extract / counit
+
 let extract(safe x) = x

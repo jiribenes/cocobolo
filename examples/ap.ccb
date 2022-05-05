@@ -1,1 +1,4 @@
+// this is the K combinator in S4 modal logic
+// alternatively, it corresponds to the (<*>) operator in Haskell
+
 let ap(safe f, safe x) = safe f(x)
