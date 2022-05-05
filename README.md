@@ -7,7 +7,7 @@ It is a code artifact of my master thesis.
 ## Downloading the repository
 
 ```
-git clone --recursive-submodules $REPO_URL
+git clone $REPO_URL
 ```
 
 ## Building
