@@ -8,4 +8,4 @@ let safe<ref,exit> squarePrint(safe<ref,exit> x) =
     printNumber(y) ;
     y
 
-let safe shouldFail = squarePrint(6)
+let safe shouldFail = 7 * squarePrint(6)
