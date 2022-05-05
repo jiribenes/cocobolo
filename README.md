@@ -16,7 +16,7 @@ Please use the Nix package manager if possible,
 it makes everything way, way easier.
 
 Alternatively if you don't want to build the project yourself, 
-you can just use a prebuilt Docker image, see [TODO]
+you can just use a prebuilt Docker image, see [here](https://github.com/jiribenes/cocobolo/releases/tag/v0.1.0.0).
 
 ### Nix
 
