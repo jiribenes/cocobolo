@@ -4,6 +4,8 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE LambdaCase #-}
 
+-- | This module takes care of lowering Cocobolo surface syntax
+-- into the core syntax (similar to CapC).
 module Lower
     ( LowerError(..)
     , lower
@@ -32,6 +34,7 @@ import qualified Surface.Surface               as S
 import           Syntax
 import           Type
 
+-- | Represents all the possible errors that might happen during lowering.
 data LowerError
     = IncompleteTypeInfo S.EffectArm Variable
     | ExtraSafety S.EffectArm Variable
@@ -66,6 +69,8 @@ instance Pretty LowerError where
         , PP.indent 4 (prettyVariableWithLoc var)
         ]
 
+-- | Lowers a binary operation.
+-- 
 -- Note: Variable identifiers cannot start with a @#@ sign,
 -- therefore we can represent builtins simply as variables prepended with @#@.
 lowerBinOp :: Loc S.BinOp -> Expr t -> Expr t -> Expr t
@@ -80,11 +85,13 @@ lowerBinOp (Loc op range) e1 = App (App (Var (LoweredVariable builtinVar)) e1)
         S.Cons   -> "#cons"
         S.Assign -> "#assign"
 
+-- | Lowers a unary operation.
 lowerUnOp :: Loc S.UnOp -> Expr t -> Expr t
 lowerUnOp (Loc (S.Safe cap) _) e = Into cap e
 lowerUnOp (Loc S.Deref range) e =
     App (Var (LoweredVariable (Loc "#deref" range))) e
 
+-- | Lowers a parameter, returns a _continuation_!
 lowerParam
     :: MonadFresh Variable m
     => S.Param
@@ -96,6 +103,7 @@ lowerParam (S.Param (S.ExplicitSafe cap) ident _maybeType) = do
     let prologue = Outta cap (Variable ident) (Var var)
     pure (var, prologue)
 
+-- | Lowers a general expression recursively.
 lowerExpr :: MonadFresh Variable m => S.Expr -> m UntypedExpr
 lowerExpr (S.Literal    lit ) = pure $ Literal lit
 lowerExpr (S.Identifier x   ) = pure $ Var $ Variable x
@@ -154,9 +162,11 @@ lowerExpr (S.Exit e range) = do
     e' <- lowerExpr e
     pure $ App (Var (LoweredVariable (Loc "#exit" range))) e'
 
+-- | Helper function that creates a function @fun(x) => e@ from its arguments.
 untypedLam :: Variable -> Expr () -> Expr ()
 untypedLam x e = Lam (Binding x e ())
 
+-- | Lowers a single case of a match expression.
 lowerCase
     :: MonadFresh Variable m
     => UntypedExpr
@@ -166,6 +176,8 @@ lowerCase _matched (Case pat e) = do
     e' <- lowerExpr e
     pure (Case (Variable <$> pat) e')
 
+-- | Lowers a type into its proper representation.
+-- Throws an error upon encountering an unknown type.
 lowerType :: MonadError LowerError m => S.Type -> m Type
 lowerType (S.TypeConstructor locId) = case locThing locId of
     "Text" -> pure TText
@@ -181,8 +193,14 @@ lowerType (S.TypeVariable locId) = pure $ TVar $ locThing locId
 lowerType (S.TypeList     t    ) = TList <$> lowerType t
 lowerType (S.TypeRef      t    ) = TRef <$> lowerType t
 
+-- | Defines a single definition bound by variable.
+-- This is used to create a function call graph.
 data SingleDefinition = SingleDefinition Variable UntypedExpr
 
+-- | Lowers a declaration into either a 'SingleDefinition' or an 'EffectDefinition'
+-- (depending on which one it is).
+--
+-- Throws an error when it sees that a reserved effect is redefined.
 lowerDecl
     :: (MonadFresh Variable m, MonadError LowerError m)
     => S.Decl
@@ -200,6 +218,8 @@ lowerDecl (S.Effect x _) | locThing x `S.member` reservedCapNames =
 lowerDecl (S.Effect x arms) =
     Right . Effect (Variable x) <$> traverse lowerEffectArm arms
 
+-- | Lowers an "arm" of an effect (one of its methods/functions).
+-- Throws an error on missing type in parameters / extra safety in parameterse / missing return type.
 lowerEffectArm :: MonadError LowerError m => S.EffectArm -> m (Variable, Type)
 lowerEffectArm arm@(name, maybeParams, maybeType) = do
     paramTypes <- case maybeParams of
@@ -220,6 +240,7 @@ lowerEffectArm arm@(name, maybeParams, maybeType) = do
     lowerParamType (S.Param S.ExplicitSafe{} n _) =
         throwError $ ExtraSafety arm (Variable n)
 
+-- | Creates recursive binding groups from definitions.
 connectedComponents :: [SingleDefinition] -> [Definition ()]
 connectedComponents =
     fmap sccToDefinition . G.stronglyConnCompR . fmap graphNode
@@ -233,6 +254,9 @@ connectedComponents =
         G.CyclicSCC defs ->
             Define $ NE.fromList $ (\(e, x, _) -> Binding x e ()) <$> defs
 
+-- | Top-level lowering function which takes Cocobolo AST
+-- and returns either a 'LowerError'
+-- or a list of definitions and effect definitions.
 lower :: [S.Decl] -> Either LowerError ([Definition ()], [EffectDefinition])
 lower decls =
     decls

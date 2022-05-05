@@ -7,6 +7,7 @@
 {-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE FlexibleContexts #-}
 
+-- | This module defines the core syntax (corresponding to the CapC system).
 module Syntax
     (
     -- * Variable
@@ -61,11 +62,16 @@ import           Pretty
 import           Surface.Loc
 import           Type                           ( Type )
 
-data Variable = Variable (Loc Text)
-              | LoweredVariable (Loc Text)
-              | FakeVariable Text
+data Variable
+    = Variable (Loc Text)
+        -- ^ an actual variable written by the user with location
+    | LoweredVariable (Loc Text)
+        -- ^ a variable which was created from lowering with location
+    | FakeVariable Text
+        -- ^ a fake variable --- newly created variable that does not correspond to any reasonable location
     deriving stock (Show, Data, Generic)
 
+-- | A lens which extracts the name of a variable
 _varText :: Lens' Variable Text
 _varText f var = setter <$> f getter
   where
@@ -90,6 +96,9 @@ instance IsString Variable where
 instance Pretty Variable where
     pretty x = x ^. _varText . to pretty
 
+-- | Special pretty-printing function for 'Variable's
+-- which includes their location.
+-- Used in error messages.
 prettyVariableWithLoc :: Variable -> P.Doc ann
 prettyVariableWithLoc (Variable loc) =
     P.hsep [P.squotes (pretty (locThing loc)), "at:", pretty (locRange loc)]
@@ -102,7 +111,7 @@ prettyVariableWithLoc (LoweredVariable loc) = P.hsep
 prettyVariableWithLoc (FakeVariable txt) =
     P.hsep [P.squotes (pretty txt), "(created automatically during lowering)"]
 
-
+-- | Represents a match pattern, parametrized by the variable.
 data Pattern var
     = PatternVariable { _patternVariable :: var }
     | PatternBlank
@@ -111,12 +120,14 @@ data Pattern var
     | PatternCons { _patternHead :: Pattern var, _patternTail :: Pattern var }
     deriving stock (Eq, Ord, Show, Data, Generic, Functor)
 
+-- | Represents a case of a match expression, parametrized by the pattern and by the consequence.
 data Case pat a = Case
     { casePattern     :: pat
     , caseConsequence :: a
     }
     deriving stock (Eq, Ord, Show, Data, Generic, Functor, Foldable, Traversable)
 
+-- | Plain literals.
 data Literal
     = BoolLiteral Bool
     | IntLiteral Int
@@ -125,6 +136,9 @@ data Literal
     | NilLiteral
     deriving stock (Eq, Ord, Show, Data, Generic)
 
+-- | Represents general expression with a bound variable.
+-- The parameter @t@ stands for a type --- all bindings are assigned a type.
+-- Initially, the type is @()@, but the information is added in after type inference.
 data Binding t = Binding
     { boundVar  :: Variable
     , boundExpr :: Expr t
@@ -132,13 +146,20 @@ data Binding t = Binding
     }
     deriving stock (Eq, Ord, Show, Data, Generic, Functor, Foldable, Traversable)
 
+-- | Lens which extracts a variable from its binding.
 _boundVar :: Lens' (Binding t) Variable
 _boundVar f s = (\v -> s { boundVar = v }) <$> f (boundVar s)
+
+-- | Lens which extracts an expression from a binding.
 _boundExpr :: Lens' (Binding t) (Expr t)
 _boundExpr f s = (\e -> s { boundExpr = e }) <$> f (boundExpr s)
+
+-- | Lens which extracts a type from a binding.
 _boundType :: Lens' (Binding t) (Expr t)
 _boundType f s = (\e -> s { boundExpr = e }) <$> f (boundExpr s)
 
+-- | General type for a core expression.
+-- The parameter @t@ stands for a type.
 data Expr t
     = Literal Literal
     | Var Variable
@@ -150,19 +171,25 @@ data Expr t
     | Into Capability (Expr t)
     deriving stock (Eq, Ord, Show, Data, Generic, Functor, Foldable, Traversable)
 
+-- | Useful type synonym for untyped 'Expr'essions.
 type UntypedExpr = Expr ()
 
--- | Use default 'uniplate' implementation
+-- | Use default @uniplate@ implementation
 instance Data t => Plated (Expr t) where
 
+-- this creates prisms (a kind of optics) from the expression
 makePrisms ''Expr
 
+-- | Returns a list of all variables contained in an expression.
+-- Traverses through expressions by using the 'cosmos' optic.
 allVariables :: Data t => Expr t -> [Variable]
 allVariables e = e ^.. cosmos . _Var
 
+-- | Definition is a top-level recursive binding group, parametrized by a type.
 newtype Definition t = Define (NonEmpty (Binding t))
     deriving stock (Eq, Ord, Show, Data, Generic, Functor, Foldable, Traversable)
 
+-- | Represents a definition of an effect.
 data EffectDefinition = Effect Variable [(Variable, Type)]
     deriving stock (Eq, Ord, Show, Data, Generic)
 
