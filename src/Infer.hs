@@ -9,6 +9,7 @@
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE TemplateHaskell #-}
 
+-- | The main type system module --- contains type inference, type constraint generation and solving.
 module Infer
     ( infer
     , InferError(..)
@@ -36,6 +37,11 @@ import           Control.Monad.Fresh
 import           Syntax
 import           Type
 
+-- | The types of builtin operations.
+--
+-- Requires a set of all capabilities because of user-created effects.
+-- (Some of the builtin operations are explicitly unsafe with respect to some capability
+-- so we cannot know statically for which expression it is actually safe.)
 builtinSchemes :: Capability -> M.Map Variable (Capability, Scheme)
 builtinSchemes allCap = M.fromList
     [ ("#add", (allCap, Forall [] $ TInt :-> TInt :-> TInt))
@@ -70,6 +76,7 @@ literalType (TextLiteral _) = Forall [] TText
 literalType UnitLiteral     = Forall [] TUnit
 literalType NilLiteral      = Forall ["a"] $ TList (TVar "a")
 
+-- | Represents the errors that can happen during type inference.
 data InferError
     = UnificationFail Type Type
     | InfiniteType TV Type
@@ -104,8 +111,11 @@ instance Pretty InferError where
                 unsafe
         )
 
+-- | Set of monomorphic variables @M@ in the thesis.
 type InferMonos = S.Set TV
 
+-- | Inference environment contains the current monomorphic variables
+-- together with all of the possible capabilities.
 data InferEnv = InferEnv
     { inferMonos   :: InferMonos
     , inferAllCaps :: Capability
@@ -113,13 +123,16 @@ data InferEnv = InferEnv
 
 makeLensesFor [("inferMonos", "_inferMonos"), ("inferAllCaps", "_inferAllCaps")] ''InferEnv
 
--- | Infer monad allows to: read monomorphic variables, create fresh variables and raise errors
+-- | The infer monad allows to: read from the 'InferEnv', create fresh variables and throw 'InferError'.
 newtype Infer a = Infer { unInfer :: ReaderT InferEnv (FreshT TV (Except InferError)) a }
   deriving newtype (Functor, Applicative, Monad, MonadReader InferEnv, MonadFresh TV, MonadError InferError)
 
+-- | Combinator that runs a computation which has the input type variable
+-- marked as monomorphic.
 withMono :: TV -> Infer a -> Infer a
 withMono m = local (\r -> r & _inferMonos %~ S.insert m)
 
+-- | 'withMono' for multiple type variables.
 withMonos :: InferMonos -> Infer a -> Infer a
 withMonos m = local (\r -> r & _inferMonos %~ flip S.union m)
 
@@ -132,8 +145,14 @@ runInfer allCaps m =
         & flip evalFreshT (initialFreshState "t" id)
         & runExcept
 
+-- | This function takes an expression and returns:
+-- * generated assumptions
+-- * generated constraints
+-- * generated type
+-- * the expression with types substituted in 'Binding's
+--
+-- This corresponds to rule set 9 (page 43) in the thesis.
 inferExpr :: Expr () -> Infer (A.Assumptions, [Constraint], Type, Expr Type)
--- inferExpr e | trace (show $ PP.pretty e) False = undefined
 inferExpr (Literal lit) = do
     t <- instantiate (literalType lit)
     pure (mempty, [], t, Literal lit)
@@ -205,6 +224,9 @@ inferExpr (Into cap e) = do
     let as' = as `A.makeSafeWrt` cap'
     pure (as', cs, TSafe cap' t, Into cap' e')
 
+-- | Generates constraints for patterns.
+-- This is not in the thesis, but it's mostly straightforward
+-- (it suffices to follow Typing Haskell in Haskell by Mark P. Jones as a reference)
 inferPattern
     :: Type
     -> Pattern Variable
@@ -240,6 +262,7 @@ inferPattern matchedType = \case
         let safe'  = safe1 <> safe2
         pure (cs', as', monos', safe')
 
+-- | Infer a single case.
 inferCase
     :: Type
     -> Case (Pattern Variable) (Expr ())
@@ -258,6 +281,8 @@ inferCase matchedType (Case pat e) = do
 
     pure (as'', cs', resultType, e')
 
+-- | Infers a declaration.
+-- Corresponds to algorithm 'Infer' in the thesis.
 inferDecl
     :: M.Map Variable (Capability, Scheme)
     -> Definition ()
@@ -302,15 +327,15 @@ inferDecl schemes (Define defs) = do
     let result = runTyping (assignTypeDefn $ Define typedDefs) sub
     pure result
 
+-- | Top-level type inference function.
 infer
     :: [EffectDefinition]
     -> [Definition ()]
     -> Either InferError [Definition Scheme]
 infer effs = runInfer allCapabilities . go initialEnv
   where
-    -- TODO: rename
-    hmm :: Definition Scheme -> M.Map Variable (Capability, Scheme)
-    hmm (Define defs) =
+    typeMap :: Definition Scheme -> M.Map Variable (Capability, Scheme)
+    typeMap (Define defs) =
         let extractSafe scheme = case scheme of
                 Forall as (TSafe cap t) -> (cap, Forall as t)
                 _                       -> (noCap, scheme)
@@ -325,7 +350,7 @@ infer effs = runInfer allCapabilities . go initialEnv
     go _       []           = pure []
     go schemes (def : defs) = do
         def' <- inferDecl schemes def
-        let schemes' = schemes `M.union` hmm def'
+        let schemes' = schemes `M.union` typeMap def'
         defs' <- go schemes' defs
         pure (def' : defs')
 
@@ -347,46 +372,58 @@ infer effs = runInfer allCapabilities . go initialEnv
                           (map (\(Effect n _) -> BaseCapability $ n ^. _varText) effs)
             `S.union` S.map BaseCapability reservedCapNames
 
+-- | Helper function which instantiates a type scheme (polytype)
+-- with fresh type variables.
 instantiate :: Scheme -> Infer Type
 instantiate (Forall as t) = do
     as' <- traverse (const fresh) as
     let sub = Subst $ M.fromList $ zip as (TVar <$> as')
     pure $ apply sub t
 
+-- | Helper function which generalizes a type.
 generalize :: InferMonos -> Type -> Scheme
 generalize free t = Forall as t
     where as = S.toList (ftv t `S.difference` free)
 
+-- | Environment containing the satisfying substitution and the current bound type variables.
+-- Used for populating the AST with polytypes.
 data TypeEnv = TypeEnv
     { typeVars :: InferMonos
     , typeSub  :: Subst
     }
     deriving stock (Eq, Ord, Show)
 
+-- | Monad which can read from 'TypeEnv'.
 type Typing a = Reader TypeEnv a
 
+-- | Runs the 'Typing' monad with an initial substitution.
 runTyping :: Typing a -> Subst -> a
 runTyping typing sub = runReader typing (TypeEnv mempty sub)
 
-schemeFor :: Type -> Typing Scheme
-schemeFor t = do
+-- | Generalizes a type according to the information in 'Typing'.
+-- Also applies the satisfying type substitution.
+generalizeTyping :: Type -> Typing Scheme
+generalizeTyping t = do
     TypeEnv { typeVars, typeSub } <- ask
     pure $ generalize typeVars $ apply typeSub t
 
+-- | Locally adds a list of active type variables into the 'Typing' context.
 withVars :: [TV] -> Typing a -> Typing a
 withVars vars =
     local $ \env -> env { typeVars = typeVars env `S.union` S.fromList vars }
 
+-- | Takes an expression which has 'Type' (monotypes) in its bindings
+-- and returns an expression which has 'Scheme' (polytypes) in its bindings.
 assignTypeExpr :: Expr Type -> Typing (Expr Scheme)
 assignTypeExpr (Literal lit        ) = pure $ Literal lit
 assignTypeExpr (Var     x          ) = pure $ Var x
 assignTypeExpr (App e1 e2) = App <$> assignTypeExpr e1 <*> assignTypeExpr e2
 assignTypeExpr (Lam (Binding x e t)) = do
-    s@(Forall as _) <- schemeFor t
+    s@(Forall as _) <- generalizeTyping t
     e'              <- withVars as $ assignTypeExpr e
     pure $ Lam $ Binding x e' s
 assignTypeExpr (Let (Binding x e1 t) e2) = do
-    s@(Forall as _) <- schemeFor t
+    s@(Forall as _) <- generalizeTyping t
     e1'             <- assignTypeExpr e1
     e2'             <- withVars as $ assignTypeExpr e2
     pure $ Let (Binding x e1' s) e2'
@@ -398,14 +435,19 @@ assignTypeExpr (Outta cap x e1 e2) =
     Outta cap x <$> assignTypeExpr e1 <*> assignTypeExpr e2
 assignTypeExpr (Into cap e) = Into cap <$> assignTypeExpr e
 
+-- | Takes a definition which has monotypes in its bindings
+-- and returns an expression which has polytypes in its bindings.
 assignTypeDefn :: Definition Type -> Typing (Definition Scheme)
 assignTypeDefn (Define bnds) = do
     bnds' <- for bnds $ \(Binding x e t) -> do
-        s@(Forall as _) <- schemeFor t
+        s@(Forall as _) <- generalizeTyping t
         e'              <- withVars as $ assignTypeExpr e
         pure $ Binding x e' s
     pure $ Define bnds'
 
+-- | Takes a set of constraints and produces a satisfying substitution.
+--
+-- Corresponds to algorithm 'Solve' in the thesis.
 solve :: [Constraint] -> Infer Subst
 solve [] = pure mempty
 solve cs = solveWith (nextSolvable cs)
@@ -428,8 +470,9 @@ solve cs = solveWith (nextSolvable cs)
         s' <- instantiate s
         solve (CEq t s' : rest)
 
+-- | Takes two types and returns the most general unifier.
+-- Corresponds to 'mgu' in the thesis.
 unify :: Type -> Type -> Infer Subst
--- unify t1 t2 | traceShow ("unifying:", PP.pretty (CEq t1 t2)) False = undefined
 unify t1 t2 | t1 == t2        = pure mempty
 unify (TVar tv)   t           = tv `bind` t
 unify t           (TVar tv  ) = tv `bind` t
@@ -442,9 +485,9 @@ unify (TSafe cap1 t1) (TSafe cap2 t2) | cap1 == cap2 = unify t1 t2
 unify (TRef t1) (TRef t2)                            = unify t1 t2
 unify t1 t2 = throwError (UnificationFail t1 t2)
 
+-- | Helper function for unifying a type with a type variable.
 bind :: TV -> Type -> Infer Subst
 bind tv t | t == TVar tv = pure mempty
           | occursCheck  = throwError (InfiniteType tv t)
           | otherwise    = pure $ Subst $ M.singleton tv t
     where occursCheck = tv `S.member` ftv t
-
