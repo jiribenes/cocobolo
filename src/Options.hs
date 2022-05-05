@@ -2,6 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DerivingStrategies #-}
 
+-- | This module takes care of parsing and storing command-line arguments.
 module Options
     ( Command(..)
     , Options

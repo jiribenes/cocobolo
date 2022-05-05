@@ -1,3 +1,4 @@
+-- | The main module of the Cocobolo library
 module Cocobolo
     ( runCocobolo
     ) where
@@ -19,6 +20,7 @@ import           Control.Monad                  ( unless
 import qualified Infer
 import qualified Lower
 import           Options
+import           Pretty                         ( prettyPrint )
 import qualified Surface.Parser                as Parser
 import           Surface.Surface                ( Decl )
 import           Syntax                         ( Definition
@@ -26,6 +28,8 @@ import           Syntax                         ( Definition
                                                 )
 import           Type                           ( Scheme )
 
+-- | Top-level function which gets command line arguments ('Options')
+-- and performs the actual work.
 runCocobolo :: Options -> IO ()
 runCocobolo opts = do
     decls <- parse opts
@@ -42,6 +46,8 @@ runCocobolo opts = do
         "You probably added a new command in src/Options and forgot to use it in src/Cocobolo!"
     exitFailure
 
+-- | Runs the parser according to the command line arguments ('Options')
+-- returning a list of declarations (AST)
 parse :: Options -> IO [Decl]
 parse opts = do
     let sourceFile = opts ^. optSource
@@ -56,6 +62,8 @@ parse opts = do
         prettyPrint decls
     pure decls
 
+-- | Runs the lowering pass according to the command line arguments ('Options')
+-- on a list of declarations (AST) returning a list of definitions (CapC AST) and effects
 lower :: Options -> [Decl] -> IO ([Definition ()], [EffectDefinition])
 lower opts decls = do
     (defs, effs) <- case Lower.lower decls of
@@ -72,6 +80,9 @@ lower opts decls = do
 
     pure (defs, effs)
 
+-- | Runs type inference according to the command line arguments ('Options')
+-- on a list of definitions (CapC AST) and custom effects,
+-- returning type-annotated list of definitions (CapC typed AST)
 infer
     :: Options
     -> [Definition ()]
@@ -89,9 +100,3 @@ infer opts defs effs = do
         prettyPrint typedDefs
 
     pure typedDefs
-
-prettyPrint :: PP.Pretty a => [a] -> IO ()
-prettyPrint xs = do
-    putDoc $ PP.align $ PP.vcat $ pretty <$> xs
-    putStrLn ""
-    putStrLn ""
