@@ -161,6 +161,8 @@ lowerExpr (S.Seq e1 e2 range) = do
 lowerExpr (S.Exit e range) = do
     e' <- lowerExpr e
     pure $ App (Var (LoweredVariable (Loc "#exit" range))) e'
+lowerExpr (S.Hole x) = do
+    pure $ Hole () $ Variable x
 
 -- | Helper function that creates a function @fun(x) => e@ from its arguments.
 untypedLam :: Variable -> Expr () -> Expr ()

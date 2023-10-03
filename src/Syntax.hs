@@ -169,6 +169,7 @@ data Expr t
     | Match (Expr t) [Case (Pattern Variable) (Expr t)]
     | Outta Capability Variable (Expr t) (Expr t)
     | Into Capability (Expr t)
+    | Hole t Variable
     deriving stock (Eq, Ord, Show, Data, Generic, Functor, Foldable, Traversable)
 
 -- | Useful type synonym for untyped 'Expr'essions.
@@ -247,6 +248,7 @@ instance Pretty t => Pretty (Expr t) where
     pretty (Match e cases) =
         "match" <+> pretty e <+> "with" <> P.hardline <> P.align
             (P.vsep (pretty <$> cases))
+    pretty (Hole t x) = P.parens ("?" <> pretty x <+> ":" <> pretty t)
 
 instance Pretty var => Pretty (Pattern var) where
     pretty (PatternVariable var) = pretty var

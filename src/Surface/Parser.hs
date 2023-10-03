@@ -54,6 +54,7 @@ literal = choice
 term :: Parser Expr
 term = choice
     [ Literal <$> literal
+    , hole
     , parens expr
     , parseMatch
     , letin
@@ -62,6 +63,8 @@ term = choice
     , Identifier <$> loc identifier
     , exit
     ]
+  where
+    hole = Hole <$ symbol "?" <*> loc identifier
 
 -- | Helpful function for parsing a `safe<...>` prefix
 -- returning a 'C.Operator'.

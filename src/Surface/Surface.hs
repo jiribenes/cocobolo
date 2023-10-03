@@ -68,6 +68,7 @@ data Expr
     | Match Expr [Case (Pattern Id) Expr]
     | Seq Expr Expr Range -- has explicit range because of lowering
     | Exit Expr Range     -- has explicit range because of lowering
+    | Hole Id
     deriving stock (Eq, Ord, Show, Generic)
 
 -- | The "arm" of an effect declaration
@@ -159,6 +160,7 @@ instance Pretty Expr where
     pretty (Match e arms) =
         P.vsep ["match" <+> pretty e <+> "with", P.vcat (map pretty arms)]
     pretty (Exit e _) = "exit" <> P.parens (pretty e)
+    pretty (Hole x) = "?" <> pretty x
 
 instance Pretty Type where
     pretty (TypeConstructor x) = pretty x

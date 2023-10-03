@@ -223,6 +223,9 @@ inferExpr (Into cap e) = do
     (as, cs, t, e') <- inferExpr e
     let as' = as `A.makeSafeWrt` cap'
     pure (as', cs, TSafe cap' t, Into cap' e')
+inferExpr (Hole () x) = do
+    tv <- TVar <$> fresh
+    pure (mempty, [], tv, Hole tv x)
 
 -- | Generates constraints for patterns.
 -- This is not in the thesis, but it's mostly straightforward
@@ -434,6 +437,9 @@ assignTypeExpr (Match matchExpr cases) = do
 assignTypeExpr (Outta cap x e1 e2) =
     Outta cap x <$> assignTypeExpr e1 <*> assignTypeExpr e2
 assignTypeExpr (Into cap e) = Into cap <$> assignTypeExpr e
+assignTypeExpr (Hole t x) = do
+    s@(Forall _ _) <- generalizeTyping t
+    pure $ Hole s x
 
 -- | Takes a definition which has monotypes in its bindings
 -- and returns an expression which has polytypes in its bindings.
